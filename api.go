@@ -15,15 +15,15 @@ const TASKS_URI = "/tasks/"
 func main() {
 	fmt.Println("hello")
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "hello") })
-	http.HandleFunc(AUTH_URI, apiHandler(AUTH_URI, auth_index, auth_post, auth_get, auth_put, auth_delete))
-	//http.HandleFunc(ACCOUNT_URI, apiHandler(ACCOUNT_URI, acct_index, acct_post, acct_get, acct_put, acct_delete))
-	//http.HandleFunc(TASKS_URI, apiHandler(TASKS_URI, tasks_index, tasks_post, tasks_get, tasks_put, tasks_delete))
+	http.HandleFunc(AUTH_URI, apiHandler(AUTH_URI, getAuthEndpoint()))
+	//http.HandleFunc(ACCOUNT_URI, apiHandler(ACCOUNT_URI, acctIndex, acctPost, acctGet, acctPut, acctDelete))
+	//http.HandleFunc(TASKS_URI, apiHandler(TASKS_URI, tasksIndex, tasksPost, tasksGet, tasksPut, tasksDelete))
 	http.ListenAndServe(":8000", nil)
 	fmt.Println("goodbye")
 }
 
 
-func apiHandler(root string, index, post func(*http.Request) interface{}, get, put, delete func(*http.Request, string) interface{}) func(http.ResponseWriter, *http.Request) {
+func apiHandler(root string, endpoint *Endpoint) func(http.ResponseWriter, *http.Request) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		var data interface{}
 		var error int
@@ -33,9 +33,9 @@ func apiHandler(root string, index, post func(*http.Request) interface{}, get, p
 
 		if endpoint_root {
 			if r.Method == "GET" {
-				data = index(r)
+				data = endpoint.Index(r)
 			} else if r.Method == "POST" {
-				data = post(r)
+				data = endpoint.Post(r)
 			} else {
 				error = 400
 				data = "\"bad request\""
@@ -43,11 +43,11 @@ func apiHandler(root string, index, post func(*http.Request) interface{}, get, p
 		} else {
 			id := r.URL.Path[len(root):]
 			if r.Method == "GET" {
-				data = get(r, id)
+				data = endpoint.Get(r, id)
 			} else if r.Method == "PUT" {
-				data = put(r, id)
+				data = endpoint.Put(r, id)
 			} else if r.Method == "DELETE" {
-				data = delete(r, id)
+				data = endpoint.Delete(r, id)
 			} else {
 				error = 400
 				data = "\"bad request (not root though)\""
@@ -64,23 +64,50 @@ func apiHandler(root string, index, post func(*http.Request) interface{}, get, p
 	return handler
 }
 
-
-func auth_index(r *http.Request) interface{} {
-	return "auth hello"
-}
-func auth_post(r *http.Request) interface{} {
-	return "auth post"
-}
-func auth_get(r *http.Request, id string) interface{} {
-	return "auth get"
-}
-func auth_put(r *http.Request, id string) interface{} {
-	return "auth put"
-}
-func auth_delete(r *http.Request, id string) interface{} {
-	return "auth delete"
+type Endpoint struct {
+	Index func(*http.Request) interface{}
+	Post func(*http.Request) interface{}
+	Get func(*http.Request, string) interface{}
+	Put func(*http.Request, string) interface{}
+	Delete func(*http.Request, string) interface{}
 }
 
+
+func getAuthEndpoint() *Endpoint {
+	index := func(r *http.Request) interface{} {
+		return "auth hello"
+	}
+	post := func(r *http.Request) interface{} {
+		return "auth post"
+	}
+	get := func(r *http.Request, id string) interface{} {
+		return "auth get"
+	}
+	put := func(r *http.Request, id string) interface{} {
+		return "auth put"
+	}
+	delete := func(r *http.Request, id string) interface{} {
+		return "auth delete"
+	}
+	return &Endpoint{Index:index, Post:post, Get:get, Put:put, Delete:delete}
+}
+
+
+func acctIndex(r *http.Request) interface{} {
+	return "account index"
+}
+func acctPost(r *http.Request) interface{} {
+	return "account post"
+}
+func acctGet(r *http.Request, id string) interface{} {
+	return "acct get"
+}
+func acctPut(r *http.Request, id string) interface{} {
+	return "acct put"
+}
+func acctDelete(r *http.Request, id string) interface{} {
+	return "acct delete"
+}
 
 type Account struct {
 	Email string
