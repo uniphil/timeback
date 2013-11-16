@@ -2,6 +2,8 @@
 
 API Access to timeback.
 
+`go build api.go`
+
 
 ## Data
 
