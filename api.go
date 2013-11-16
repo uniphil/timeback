@@ -65,10 +65,6 @@ func apiHandler(root string, index, post func(*http.Request) interface{}, get, p
 }
 
 
-func bad_request(r *http.Request) interface{} {
-	return "auth baaaaaaaad"
-}
-
 func auth_index(r *http.Request) interface{} {
 	return "auth hello"
 }
