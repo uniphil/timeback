@@ -16,8 +16,8 @@ func main() {
 	fmt.Println("hello")
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "hello") })
 	http.HandleFunc(AUTH_URI, apiHandler(AUTH_URI, getAuthEndpoint()))
-	//http.HandleFunc(ACCOUNT_URI, apiHandler(ACCOUNT_URI, acctIndex, acctPost, acctGet, acctPut, acctDelete))
-	//http.HandleFunc(TASKS_URI, apiHandler(TASKS_URI, tasksIndex, tasksPost, tasksGet, tasksPut, tasksDelete))
+	http.HandleFunc(ACCOUNT_URI, apiHandler(ACCOUNT_URI, getAcctEndpoint()))
+	http.HandleFunc(TASKS_URI, apiHandler(TASKS_URI, getTasksEndpoint()))
 	http.ListenAndServe(":8000", nil)
 	fmt.Println("goodbye")
 }
@@ -92,21 +92,42 @@ func getAuthEndpoint() *Endpoint {
 	return &Endpoint{Index:index, Post:post, Get:get, Put:put, Delete:delete}
 }
 
+func getAcctEndpoint() *Endpoint {
+	index := func(r *http.Request) interface{} {
+		return "acct hello"
+	}
+	post := func(r *http.Request) interface{} {
+		return "acct post"
+	}
+	get := func(r *http.Request, id string) interface{} {
+		return "acct get"
+	}
+	put := func(r *http.Request, id string) interface{} {
+		return "acct put"
+	}
+	delete := func(r *http.Request, id string) interface{} {
+		return "acct delete"
+	}
+	return &Endpoint{Index:index, Post:post, Get:get, Put:put, Delete:delete}
+}
 
-func acctIndex(r *http.Request) interface{} {
-	return "account index"
-}
-func acctPost(r *http.Request) interface{} {
-	return "account post"
-}
-func acctGet(r *http.Request, id string) interface{} {
-	return "acct get"
-}
-func acctPut(r *http.Request, id string) interface{} {
-	return "acct put"
-}
-func acctDelete(r *http.Request, id string) interface{} {
-	return "acct delete"
+func getTasksEndpoint() *Endpoint {
+	index := func(r *http.Request) interface{} {
+		return "tasks hello"
+	}
+	post := func(r *http.Request) interface{} {
+		return "tasks post"
+	}
+	get := func(r *http.Request, id string) interface{} {
+		return "tasks get"
+	}
+	put := func(r *http.Request, id string) interface{} {
+		return "tasks put"
+	}
+	delete := func(r *http.Request, id string) interface{} {
+		return "tasks delete"
+	}
+	return &Endpoint{Index:index, Post:post, Get:get, Put:put, Delete:delete}
 }
 
 type Account struct {
