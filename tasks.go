@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"fmt"
+	//"fmt"
 	"time"
 	"strconv"
 	"database/sql"
@@ -23,7 +23,7 @@ type Task struct {
 }
 func (t *Task) Save(db *sql.DB) error {
 	_, err := db.Exec("INSERT INTO tasks (description, duration, user_id) VALUES ($1, $2, 1)",
-							t.Description, t.Duration)
+							t.Description, DurationToDB(t.Duration))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,7 +43,7 @@ func LoadTask(db *sql.DB, task_id string) (*Task, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	task := &Task{ID: strconv.Itoa(id), Description: desc, Duration: time.Duration(dur)}
+	task := &Task{ID: strconv.Itoa(id), Description: desc, Duration: DurationFromDB(dur)}
 
 	return task, nil
 }
@@ -62,12 +62,20 @@ func LoadAccountTasks(db *sql.DB, account_id string) ([]*Task, error) {
 		var desc string
 
 		if err := rows.Scan(&id, &desc, &dur); err != nil {
-			fmt.Println(err)
+			log.Fatal(err)
 		}
 
 	    //dur, _ := time.ParseDuration("10s")
-		task := &Task{ID: strconv.Itoa(id), Description: desc, Duration: time.Duration(dur)}
+		task := &Task{ID: strconv.Itoa(id), Description: desc, Duration: DurationFromDB(dur)}
 		tasks = append(tasks, task)
 	}
 	return tasks, nil
+}
+
+func DurationFromDB(s int) time.Duration {
+	return time.Duration(int64(s) * int64(time.Second))
+}
+
+func DurationToDB(d time.Duration) int {
+	return int(d / time.Second)
 }
