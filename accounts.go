@@ -1,17 +1,17 @@
 package main
 
 type Account struct {
-    Email string
+	Email string
 }
 func (a *Account) Save() error {
-    return nil
+	return nil
 }
 func (a *Account) Update() error {
-    return nil
+	return nil
 }
 func (a *Account) Remove() error {
-    return nil
+	return nil
 }
 func LoadAccount(email string) (*Account, error) {
-    return &Account{Email: email}, nil
+	return &Account{Email: email}, nil
 }
