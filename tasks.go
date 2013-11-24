@@ -1,24 +1,32 @@
 package main
 
-import(
-	//"fmt"
+import (
+	"log"
+	"fmt"
 	"time"
+	"strconv"
 	"database/sql"
-	_ "github.com/lib/pq"
 )
 
 type Task struct {
+	/*CREATE TABLE tasks (
+	id serial PRIMARY KEY,
+	description text NOT NULL,
+	duration integer NOT NULL,
+	user_id integer NOT NULL);*/
 	ID string
-	Project string
+	//Project string
 	Description string
 	Duration time.Duration
-	Date time.Time
-	Creation time.Time
+	//Date time.Time
+	//Creation time.Time
 }
-func (t *Task) Save() error {
-	db, err := sql.Open("postgres", "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full")
-	//age := 23
-	//rows, err := db.Query("SELECT name FROM users WHERE age=?", age)
+func (t *Task) Save(db *sql.DB) error {
+	_, err := db.Exec("INSERT INTO tasks (description, duration, user_id) VALUES ($1, $2, 1)",
+							t.Description, t.Duration)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return nil
 }
 func (t *Task) Update() error {
@@ -27,19 +35,39 @@ func (t *Task) Update() error {
 func (t *Task) Remove() error {
 	return nil
 }
-func LoadTask(task_id string) (*Task, error) {
-	dur, _ := time.ParseDuration("10s")
-	return &Task{ID: task_id,
-				 Project: "test",
-				 Description: "hello world",
-				 Duration: dur,
-				 Date: time.Date(2013, time.November, 15, 10, 0, 0, 0, time.UTC),
-				 Creation: time.Date(2013, time.November, 15, 11, 0, 0, 0, time.UTC),
-				 }, nil
+func LoadTask(db *sql.DB, task_id string) (*Task, error) {
+	var id, dur int
+	var desc string
+	row := db.QueryRow("SELECT id, description, duration FROM tasks WHERE id=$1", task_id)
+	err := row.Scan(&id, &desc, &dur)
+	if err != nil {
+		log.Fatal(err)
+	}
+	task := &Task{ID: strconv.Itoa(id), Description: desc, Duration: time.Duration(dur)}
+
+	return task, nil
 }
 
-func LoadAccountTasks(account_id string) ([]*Task, error) {
+func LoadAccountTasks(db *sql.DB, account_id string) ([]*Task, error) {
+
 	// SELECT * FROM tasks WHERE account=$1 LIMIT 50 ORDER_BT date ASC
-	task, _ := LoadTask("lalala")
-	return []*Task{task}, nil
+	rows, err := db.Query("SELECT id, description, duration FROM tasks")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var tasks []*Task
+	for rows.Next() {
+		var id, dur int
+		var desc string
+
+		if err := rows.Scan(&id, &desc, &dur); err != nil {
+			fmt.Println(err)
+		}
+
+	    //dur, _ := time.ParseDuration("10s")
+		task := &Task{ID: strconv.Itoa(id), Description: desc, Duration: time.Duration(dur)}
+		tasks = append(tasks, task)
+	}
+	return tasks, nil
 }

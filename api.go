@@ -10,9 +10,11 @@ TODO
 package main
 
 import (
+	"os"
 	"fmt"
     "time"
 	"net/http"
+	"database/sql"
 )
 
 const (
@@ -23,13 +25,14 @@ const (
 
 func main() {
 	fmt.Println("hello this is api")
-	AttachEndpoint(AUTH_URI, GetAuthEndpoint())
-	AttachEndpoint(ACCOUNT_URI, GetAcctEndpoint())
-	AttachEndpoint(TASKS_URI, GetTasksEndpoint())
-	Listen(":8000")
+	db := ConnectDB(os.Getenv("POSTGRES_URI"))
+	AttachEndpoint(AUTH_URI, GetAuthEndpoint(db))
+	AttachEndpoint(ACCOUNT_URI, GetAcctEndpoint(db))
+	AttachEndpoint(TASKS_URI, GetTasksEndpoint(db))
+	Listen(os.Getenv("HOST"))
 }
 
-func GetAuthEndpoint() *Endpoint {
+func GetAuthEndpoint(db *sql.DB) *Endpoint {
 	index := func(r *http.Request) (interface{}, int) {
 		return "auth hello", 200
 	}
@@ -48,7 +51,7 @@ func GetAuthEndpoint() *Endpoint {
 	return &Endpoint{Index:index, Post:post, Get:get, Put:put, Delete:delete}
 }
 
-func GetAcctEndpoint() *Endpoint {
+func GetAcctEndpoint(db *sql.DB) *Endpoint {
 	index := func(r *http.Request) (interface{}, int) {
 		return "acct hello", 200
 	}
@@ -67,9 +70,9 @@ func GetAcctEndpoint() *Endpoint {
 	return &Endpoint{Index:index, Post:post, Get:get, Put:put, Delete:delete}
 }
 
-func GetTasksEndpoint() *Endpoint {
+func GetTasksEndpoint(db *sql.DB) *Endpoint {
 	index := func(r *http.Request) (interface{}, int) {
-		tasks, _ := LoadAccountTasks("0")
+		tasks, _ := LoadAccountTasks(db, "0")
 		return tasks, 200
 	}
 	post := func(r *http.Request) (interface{}, int) {
@@ -83,11 +86,12 @@ func GetTasksEndpoint() *Endpoint {
 			return "bad duration", 400
 		}
 		t := &Task{Description: desc[0], Duration: dur}
-		t.Save()
+		t.Save(db)
 		return "tasks post", 200
 	}
 	get := func(r *http.Request, id string) (interface{}, int) {
-		return "tasks get", 200
+		task, _ := LoadTask(db, "1")
+		return task, 200
 	}
 	put := func(r *http.Request, id string) (interface{}, int) {
 		return "tasks put", 200
