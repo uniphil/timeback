@@ -29,10 +29,20 @@ func (t *Task) Save(db *sql.DB) error {
 	}
 	return nil
 }
-func (t *Task) Update() error {
+func (t *Task) Update(db *sql.DB) error {
+	// NOT IMPLEMENTED
 	return nil
 }
-func (t *Task) Remove() error {
+func DeleteTask(db *sql.DB, task_id string) error {
+	result, err := db.Exec("DELETE FROM tasks WHERE id=$1", task_id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = result.RowsAffected()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// SHOULD RAISE ERROR IF NON-EXISTENT ROWS?
 	return nil
 }
 func LoadTask(db *sql.DB, task_id string) (*Task, error) {
@@ -40,7 +50,9 @@ func LoadTask(db *sql.DB, task_id string) (*Task, error) {
 	var desc string
 	row := db.QueryRow("SELECT id, description, duration FROM tasks WHERE id=$1", task_id)
 	err := row.Scan(&id, &desc, &dur)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return nil, err
+	} else if err != nil {
 		log.Fatal(err)
 	}
 	task := &Task{ID: strconv.Itoa(id), Description: desc, Duration: DurationFromDB(dur)}
@@ -65,7 +77,6 @@ func LoadAccountTasks(db *sql.DB, account_id string) ([]*Task, error) {
 			log.Fatal(err)
 		}
 
-	    //dur, _ := time.ParseDuration("10s")
 		task := &Task{ID: strconv.Itoa(id), Description: desc, Duration: DurationFromDB(dur)}
 		tasks = append(tasks, task)
 	}

@@ -87,17 +87,21 @@ func GetTasksEndpoint(db *sql.DB) *Endpoint {
 		}
 		t := &Task{Description: desc[0], Duration: dur}
 		t.Save(db)
-		return "tasks post", 200
+		return "Saved task", 200
 	}
 	get := func(r *http.Request, id string) (interface{}, int) {
-		task, _ := LoadTask(db, "1")
+		task, err := LoadTask(db, id)
+		if err == sql.ErrNoRows {
+			return "No task found for you there, sorry :(", 404
+		}
 		return task, 200
 	}
 	put := func(r *http.Request, id string) (interface{}, int) {
-		return "tasks put", 200
+		return "tasks put (not implemented yet)", 200
 	}
 	delete := func(r *http.Request, id string) (interface{}, int) {
-		return "tasks delete", 200
+		DeleteTask(db, id)
+		return "Deleted task.", 200
 	}
 	return &Endpoint{Index:index, Post:post, Get:get, Put:put, Delete:delete}
 }
